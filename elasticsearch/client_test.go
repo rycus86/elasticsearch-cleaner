@@ -1,12 +1,12 @@
 package elasticsearch
 
 import (
-	"testing"
-	"net/http"
-	"net/http/httptest"
 	"fmt"
 	"github.com/rycus86/elasticsearch-cleaner/settings"
+	"net/http"
+	"net/http/httptest"
 	"os"
+	"testing"
 )
 
 var server *httptest.Server
@@ -102,23 +102,23 @@ func TestFailingDeleteIndexRequest(t *testing.T) {
 }
 
 type mockSettings struct {
-	Pattern		string
-	MaxIndices	int
-	Status		int
-	Response	string
-	ExpectedPath	string
+	Pattern      string
+	MaxIndices   int
+	Status       int
+	Response     string
+	ExpectedPath string
 }
 
 func mocks() *mockSettings {
 	return &mockSettings{
-		Status:		http.StatusOK,
-		Pattern:	"x",
-		MaxIndices:	10,
+		Status:     http.StatusOK,
+		Pattern:    "x",
+		MaxIndices: 10,
 	}
 }
 
 func initialize(m *mockSettings) *httptest.Server {
-	server = httptest.NewServer(http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(m.Status)
 		w.Write([]byte(m.Response))
 	}))

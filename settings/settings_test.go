@@ -118,6 +118,8 @@ func TestInvalidEmptyPattern(t *testing.T) {
 func TestInvalidMaxIndices(t *testing.T) {
 	os.Setenv("BASE_URL", "valid-url")
 	defer os.Unsetenv("BASE_URL")
+	os.Setenv("PATTERN", "pattern")
+	defer os.Unsetenv("PATTERN")
 	os.Setenv("MAX_INDICES", "invalid-int")
 	defer os.Unsetenv("MAX_INDICES")
 
@@ -133,6 +135,8 @@ func TestInvalidMaxIndices(t *testing.T) {
 func TestMaxIndicesOutOfRange(t *testing.T) {
 	os.Setenv("BASE_URL", "valid-url")
 	defer os.Unsetenv("BASE_URL")
+	os.Setenv("PATTERN", "pattern")
+	defer os.Unsetenv("PATTERN")
 	os.Setenv("MAX_INDICES", "-12")
 	defer os.Unsetenv("MAX_INDICES")
 
@@ -148,8 +152,74 @@ func TestMaxIndicesOutOfRange(t *testing.T) {
 func TestMaxIndicesNonInteger(t *testing.T) {
 	os.Setenv("BASE_URL", "valid-url")
 	defer os.Unsetenv("BASE_URL")
+	os.Setenv("PATTERN", "pattern")
+	defer os.Unsetenv("PATTERN")
 	os.Setenv("MAX_INDICES", "3.14")
 	defer os.Unsetenv("MAX_INDICES")
+
+	defer func() {
+		if err := recover(); err == nil {
+			t.Error("Expected to panic")
+		}
+	}()
+
+	Initialize()
+}
+
+func TestInterval(t *testing.T) {
+	os.Setenv("BASE_URL", "sample-url")
+	defer os.Unsetenv("BASE_URL")
+	os.Setenv("PATTERN", "changed")
+	defer os.Unsetenv("PATTERN")
+	os.Setenv("INTERVAL", "3m12s")
+	defer os.Unsetenv("INTERVAL")
+
+	Initialize()
+
+	if interval := GetInterval(); interval.Seconds() != 192 {
+		t.Errorf("Unexpected interval: %s", interval)
+	}
+}
+
+func TestInvalidInterval(t *testing.T) {
+	os.Setenv("BASE_URL", "valid-url")
+	defer os.Unsetenv("BASE_URL")
+	os.Setenv("PATTERN", "pattern")
+	defer os.Unsetenv("PATTERN")
+	os.Setenv("INTERVAL", "x-1")
+	defer os.Unsetenv("INTERVAL")
+
+	defer func() {
+		if err := recover(); err == nil {
+			t.Error("Expected to panic")
+		}
+	}()
+
+	Initialize()
+}
+
+func TestTimeout(t *testing.T) {
+	os.Setenv("BASE_URL", "sample-url")
+	defer os.Unsetenv("BASE_URL")
+	os.Setenv("PATTERN", "changed")
+	defer os.Unsetenv("PATTERN")
+	os.Setenv("TIMEOUT", "42s")
+	defer os.Unsetenv("TIMEOUT")
+
+	Initialize()
+
+	if timeout := GetTimeout(); timeout.Seconds() != 42 {
+		t.Errorf("Unexpected timeout: %s", timeout)
+	}
+}
+
+func TestInvalidTimeout(t *testing.T) {
+	os.Setenv("BASE_URL", "valid-url")
+	defer os.Unsetenv("BASE_URL")
+	os.Setenv("PATTERN", "pattern")
+	defer os.Unsetenv("PATTERN")
+	os.Setenv("TIMEOUT", "x-1")
+	defer os.Unsetenv("TIMEOUT")
 
 	defer func() {
 		if err := recover(); err == nil {

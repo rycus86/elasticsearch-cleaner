@@ -6,16 +6,21 @@ import (
 	"net/url"
 	"regexp"
 	"strconv"
+	"time"
 )
 
 type applicationSettings struct {
 	BaseUrl    string
 	Pattern    string
 	MaxIndices int
+	Interval   time.Duration
+	Timeout    time.Duration
 }
 
 var settings = &applicationSettings{
 	MaxIndices: 20,
+	Interval:   12 * time.Hour,
+	Timeout:    30 * time.Second,
 }
 
 func Initialize() {
@@ -39,6 +44,20 @@ func Initialize() {
 	}
 
 	settings.MaxIndices = maxIndices
+
+	interval, err := time.ParseDuration(env.GetOrDefault("INTERVAL", settings.Interval.String()))
+	if interval <= 0 || err != nil {
+		panic(fmt.Sprintf("Invalid INTERVAL value: %s - %s", env.Get("INTERVAL"), err))
+	}
+
+	settings.Interval = interval
+
+	timeout, err := time.ParseDuration(env.GetOrDefault("TIMEOUT", settings.Timeout.String()))
+	if timeout <= 0 || err != nil {
+		panic(fmt.Sprintf("Invalid TIMEOUT value: %s - %s", env.Get("TIMEOUT"), err))
+	}
+
+	settings.Timeout = timeout
 }
 
 func GetBaseUrl() string {
@@ -51,4 +70,12 @@ func GetPattern() string {
 
 func GetMaxIndices() int {
 	return settings.MaxIndices
+}
+
+func GetInterval() time.Duration {
+	return settings.Interval
+}
+
+func GetTimeout() time.Duration {
+	return settings.Timeout
 }
