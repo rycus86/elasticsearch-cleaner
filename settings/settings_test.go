@@ -8,6 +8,8 @@ import (
 func TestDefaults(t *testing.T) {
 	os.Setenv("BASE_URL", "base-url")
 	defer os.Unsetenv("BASE_URL")
+	os.Setenv("PATTERN", "pattern")
+	defer os.Unsetenv("PATTERN")
 
 	Initialize()
 
@@ -15,7 +17,7 @@ func TestDefaults(t *testing.T) {
 		t.Errorf("Base URL not set properly: %s", baseUrl)
 	}
 
-	if pattern := GetPattern(); pattern != ".*" {
+	if pattern := GetPattern(); pattern != "pattern" {
 		t.Errorf("Unexpected pattern: %s", pattern)
 	}
 
@@ -59,6 +61,19 @@ func TestNoBaseUrl(t *testing.T) {
 
 func TestInvalidBaseUrl(t *testing.T) {
 	os.Setenv("BASE_URL", "@:@")
+	defer os.Unsetenv("BASE_URL")
+
+	defer func() {
+		if err := recover(); err == nil {
+			t.Error("Expected to panic")
+		}
+	}()
+
+	Initialize()
+}
+
+func TestNoPattern(t *testing.T) {
+	os.Setenv("BASE_URL", "base-set")
 	defer os.Unsetenv("BASE_URL")
 
 	defer func() {

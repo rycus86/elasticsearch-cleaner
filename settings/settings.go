@@ -15,23 +15,20 @@ type applicationSettings struct {
 }
 
 var settings = &applicationSettings{
-	Pattern:    ".*",
 	MaxIndices: 20,
 }
 
 func Initialize() {
-	//baseUrl := env.Get("BASE_URL")
-	baseUrl := env.GetOrDefault("BASE_URL", "http://192.168.0.52:9200")
+	baseUrl := env.Get("BASE_URL")
 	if _, err := url.Parse(baseUrl); baseUrl == "" || err != nil {
 		panic(fmt.Sprintf("Missing or invalid BASE_URL: %s", baseUrl))
 	}
 
 	settings.BaseUrl = baseUrl
 
-	//pattern := env.GetOrDefault("PATTERN", settings.Pattern)
-	pattern := env.GetOrDefault("PATTERN", "fluentd-.*")
+	pattern := env.Get("PATTERN")
 	if _, err := regexp.Compile(pattern); pattern == "" || err != nil {
-		panic(fmt.Sprintf("Invalid regexp pattern: %s", pattern))
+		panic(fmt.Sprintf("Invalid regexp pattern: '%s'", pattern))
 	}
 
 	settings.Pattern = pattern

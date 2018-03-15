@@ -35,6 +35,11 @@ func (es *esClient) FetchIndices() ([]string, error) {
 		return []string{}, err
 	}
 
+	if response.StatusCode != http.StatusOK {
+		fmt.Printf("Failed to fetch ES stats: %s\n", response.Status)
+		return []string{}, errors.New(fmt.Sprintf("HTTP %s", response.Status))
+	}
+
 	var stats = statistics{}
 	err = json.NewDecoder(response.Body).Decode(&stats)
 
@@ -65,7 +70,7 @@ func (es *esClient) DeleteIndex(key string) error {
 	if err != nil {
 		return err
 	} else {
-		if response.StatusCode != http.StatusOK {
+		if response.StatusCode == http.StatusOK {
 			return nil
 		} else {
 			return errors.New(fmt.Sprintf("HTTP %s", response.Status))
