@@ -1,0 +1,19 @@
+image: rycus86/elasticsearch-cleaner:latest
+manifests:
+  -
+    image: rycus86/elasticsearch-cleaner:amd64
+    platform:
+      architecture: amd64
+      os: linux
+  -
+    image: rycus86/elasticsearch-cleaner:armhf
+    platform:
+      architecture: arm
+      variant: v7
+      os: linux
+  -
+    image: rycus86/elasticsearch-cleaner:aarch64
+    platform:
+      architecture: arm64
+      variant: v8
+      os: linux
