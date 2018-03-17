@@ -1,4 +1,6 @@
-sudo: required
+language: go
+go:
+  - "1.10"
 
 services:
 - docker
@@ -16,6 +18,7 @@ jobs:
   include:
     - &deploy-stage
       stage: build and deploy
+      sudo: required
       script:
         # build
         - >
@@ -49,6 +52,7 @@ jobs:
         - CC_GOARCH=arm64
 
     - stage: manifest
+      sudo: required
       script:
         - |
         - docker login -u="rycus86" -p="${DOCKER_PASSWORD}"
