@@ -9,73 +9,75 @@ import (
 	"time"
 )
 
-type applicationSettings struct {
-	BaseUrl    string
-	Pattern    string
-	MaxIndices int
-	Interval   time.Duration
-	Timeout    time.Duration
+type ApplicationSettings struct {
+	baseUrl    string
+	pattern    string
+	maxIndices int
+	interval   time.Duration
+	timeout    time.Duration
 }
 
-var settings = &applicationSettings{
-	MaxIndices: 20,
-	Interval:   12 * time.Hour,
-	Timeout:    30 * time.Second,
-}
+func Initialize() *ApplicationSettings {
+	settings := &ApplicationSettings{
+		maxIndices: 20,
+		interval:   12 * time.Hour,
+		timeout:    30 * time.Second,
+	}
 
-func Initialize() {
 	baseUrl := env.Get("BASE_URL")
 	if _, err := url.Parse(baseUrl); baseUrl == "" || err != nil {
 		panic(fmt.Sprintf("Missing or invalid BASE_URL: %s", baseUrl))
 	}
 
-	settings.BaseUrl = baseUrl
+	settings.baseUrl = baseUrl
 
 	pattern := env.Get("PATTERN")
 	if _, err := regexp.Compile(pattern); pattern == "" || err != nil {
 		panic(fmt.Sprintf("Invalid regexp pattern: '%s'", pattern))
 	}
 
-	settings.Pattern = pattern
+	settings.pattern = pattern
 
-	maxIndices, err := strconv.Atoi(env.GetOrDefault("MAX_INDICES", strconv.Itoa(settings.MaxIndices)))
+	maxIndices, err := strconv.Atoi(env.GetOrDefault("MAX_INDICES", strconv.Itoa(settings.maxIndices)))
 	if maxIndices <= 0 || err != nil {
 		panic(fmt.Sprintf("Invalid MAX_INDICES value: %s - %s", env.Get("MAX_INDICES"), err))
 	}
 
-	settings.MaxIndices = maxIndices
+	settings.maxIndices = maxIndices
 
-	interval, err := time.ParseDuration(env.GetOrDefault("INTERVAL", settings.Interval.String()))
+	interval, err := time.ParseDuration(env.GetOrDefault("INTERVAL", settings.interval.String()))
 	if interval <= 0 || err != nil {
 		panic(fmt.Sprintf("Invalid INTERVAL value: %s - %s", env.Get("INTERVAL"), err))
 	}
 
-	settings.Interval = interval
+	settings.interval = interval
 
-	timeout, err := time.ParseDuration(env.GetOrDefault("TIMEOUT", settings.Timeout.String()))
+	timeout, err := time.ParseDuration(env.GetOrDefault("TIMEOUT", settings.timeout.String()))
 	if timeout <= 0 || err != nil {
 		panic(fmt.Sprintf("Invalid TIMEOUT value: %s - %s", env.Get("TIMEOUT"), err))
 	}
 
-	settings.Timeout = timeout
+	settings.timeout = timeout
+
+	return settings
 }
 
-func GetBaseUrl() string {
-	return settings.BaseUrl
+func (settings *ApplicationSettings) GetBaseUrl() string {
+	return settings.baseUrl
 }
 
-func GetPattern() string {
-	return settings.Pattern
+func (settings *ApplicationSettings) GetPattern() string {
+	return settings.pattern
 }
 
-func GetMaxIndices() int {
-	return settings.MaxIndices
+func (settings *ApplicationSettings) GetMaxIndices() int {
+	return settings.maxIndices
 }
 
-func GetInterval() time.Duration {
-	return settings.Interval
+func (settings *ApplicationSettings) GetInterval() time.Duration {
+	return settings.interval
 }
 
-func GetTimeout() time.Duration {
-	return settings.Timeout
+func (settings *ApplicationSettings) GetTimeout() time.Duration {
+	return settings.timeout
 }

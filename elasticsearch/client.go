@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/rycus86/elasticsearch-cleaner/settings"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -13,16 +12,17 @@ import (
 
 type esClient struct {
 	httpClient *http.Client
+	baseUrl    string
 }
 
-func NewClient(httpClient *http.Client) Client {
-	return &esClient{httpClient: httpClient}
+func NewClient(httpClient *http.Client, baseUrl string) Client {
+	return &esClient{httpClient: httpClient, baseUrl: baseUrl}
 }
 
-func (es *esClient) FetchIndices() ([]string, error) {
-	statsUrl, err := url.Parse(fmt.Sprintf("%s/_stats", settings.GetBaseUrl()))
+func (es *esClient) FetchIndices(pattern string) ([]string, error) {
+	statsUrl, err := url.Parse(fmt.Sprintf("%s/_stats", es.baseUrl))
 	if err != nil {
-		panic(fmt.Sprintf("Invalid URL: %s/_stats", settings.GetBaseUrl()))
+		panic(fmt.Sprintf("Invalid URL: %s/_stats", es.baseUrl))
 	}
 
 	response, err := es.httpClient.Do(&http.Request{
@@ -40,7 +40,7 @@ func (es *esClient) FetchIndices() ([]string, error) {
 		return []string{}, errors.New(fmt.Sprintf("HTTP %s", response.Status))
 	}
 
-	var stats = statistics{}
+	stats := statistics{}
 	err = json.NewDecoder(response.Body).Decode(&stats)
 
 	if err != nil {
@@ -50,7 +50,7 @@ func (es *esClient) FetchIndices() ([]string, error) {
 
 	keys := make([]string, 0, len(stats.Indices))
 	for key := range stats.Indices {
-		if matched, _ := regexp.MatchString(settings.GetPattern(), key); matched {
+		if matched, _ := regexp.MatchString(pattern, key); matched {
 			keys = append(keys, key)
 		}
 	}
@@ -61,7 +61,7 @@ func (es *esClient) FetchIndices() ([]string, error) {
 }
 
 func (es *esClient) DeleteIndex(key string) error {
-	indexUrl, _ := url.Parse(fmt.Sprintf("%s/%s", settings.GetBaseUrl(), key))
+	indexUrl, _ := url.Parse(fmt.Sprintf("%s/%s", es.baseUrl, key))
 	response, err := es.httpClient.Do(&http.Request{
 		Method: "DELETE",
 		URL:    indexUrl,

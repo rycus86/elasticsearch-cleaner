@@ -2,7 +2,6 @@ package elasticsearch
 
 import (
 	"fmt"
-	"github.com/rycus86/elasticsearch-cleaner/settings"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -13,7 +12,6 @@ var server *httptest.Server
 
 func TestFetchIndices(t *testing.T) {
 	setup := mocks()
-	setup.Pattern = "sample-.*"
 	setup.Response = `
 	{
 		"indices": {
@@ -26,10 +24,10 @@ func TestFetchIndices(t *testing.T) {
 	}
 	`
 
-	initialize(setup)
+	baseUrl := initialize(setup)
 
-	client := NewClient(&http.Client{})
-	response, err := client.FetchIndices()
+	client := NewClient(&http.Client{}, baseUrl)
+	response, err := client.FetchIndices("sample-.*")
 
 	if err != nil {
 		t.Errorf("Invalid response: %s", err)
@@ -50,10 +48,10 @@ func TestInvalidIndicesResponse(t *testing.T) {
 	setup := mocks()
 	setup.Response = "not-a-json"
 
-	initialize(setup)
+	baseUrl := initialize(setup)
 
-	client := NewClient(&http.Client{})
-	_, err := client.FetchIndices()
+	client := NewClient(&http.Client{}, baseUrl)
+	_, err := client.FetchIndices("fail")
 
 	if err == nil {
 		t.Error("Expected to fail")
@@ -65,10 +63,10 @@ func TestFailingFetchIndicesRequest(t *testing.T) {
 	setup.Status = 500
 	setup.Response = "{}"
 
-	initialize(setup)
+	baseUrl := initialize(setup)
 
-	client := NewClient(&http.Client{})
-	_, err := client.FetchIndices()
+	client := NewClient(&http.Client{}, baseUrl)
+	_, err := client.FetchIndices("fail")
 
 	if err == nil {
 		t.Error("Expected to fail")
@@ -76,9 +74,9 @@ func TestFailingFetchIndicesRequest(t *testing.T) {
 }
 
 func TestDeleteIndex(t *testing.T) {
-	initialize(mocks())
+	baseUrl := initialize(mocks())
 
-	client := NewClient(&http.Client{})
+	client := NewClient(&http.Client{}, baseUrl)
 	err := client.DeleteIndex("x")
 
 	if err != nil {
@@ -91,9 +89,9 @@ func TestFailingDeleteIndexRequest(t *testing.T) {
 	setup.Status = 500
 	setup.Response = "{}"
 
-	initialize(setup)
+	baseUrl := initialize(setup)
 
-	client := NewClient(&http.Client{})
+	client := NewClient(&http.Client{}, baseUrl)
 	err := client.DeleteIndex("failing")
 
 	if err == nil {
@@ -102,8 +100,6 @@ func TestFailingDeleteIndexRequest(t *testing.T) {
 }
 
 type mockSettings struct {
-	Pattern      string
-	MaxIndices   int
 	Status       int
 	Response     string
 	ExpectedPath string
@@ -111,32 +107,20 @@ type mockSettings struct {
 
 func mocks() *mockSettings {
 	return &mockSettings{
-		Status:     http.StatusOK,
-		Pattern:    "x",
-		MaxIndices: 10,
+		Status: http.StatusOK,
 	}
 }
 
-func initialize(m *mockSettings) *httptest.Server {
+func initialize(m *mockSettings) string {
 	server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(m.Status)
 		w.Write([]byte(m.Response))
 	}))
 
-	os.Setenv("BASE_URL", server.URL)
-	os.Setenv("PATTERN", fmt.Sprintf("%s.*", m.Pattern))
-	os.Setenv("MAX_INDICES", fmt.Sprintf("%d", m.MaxIndices))
-
-	settings.Initialize()
-
-	return server
+	return server.URL
 }
 
 func TestMain(m *testing.M) {
-	defer os.Unsetenv("BASE_URL")
-	defer os.Unsetenv("PATTERN")
-	defer os.Unsetenv("MAX_INDICES")
-
 	defer server.Close()
 
 	os.Exit(m.Run())

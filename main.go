@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+var config *settings.ApplicationSettings
+
 func StartCommunication(eventChannel chan bool, es elasticsearch.Client) {
 	deleteChannel := make(chan string)
 
@@ -36,22 +38,22 @@ func WaitForDeletes(deleteChannel chan string, es elasticsearch.Client) {
 }
 
 func CheckIndices(delete chan<- string, es elasticsearch.Client) {
-	keys, err := es.FetchIndices()
+	keys, err := es.FetchIndices(config.GetPattern())
 	if err != nil {
 		log.Panic("Failed to fetch indices: ", err)
 	}
 
-	if len(keys) <= settings.GetMaxIndices() {
-		fmt.Println("There are only", len(keys), "items ( <=", settings.GetMaxIndices(), ")")
+	numKeys, maxIndices := len(keys), config.GetMaxIndices()
+	if numKeys <= maxIndices {
+		fmt.Println("There are only", numKeys, "items ( <=", maxIndices, ")")
 		return
 	} else {
-		fmt.Println("There are", len(keys), "items")
+		fmt.Println("There are", numKeys, "items")
 	}
 
-	lastKey := len(keys) - settings.GetMaxIndices()
+	lastKey := numKeys - maxIndices
 	for _, key := range keys[0:lastKey] {
 		delete <- key
-		//go DeleteIndex(key, es)
 	}
 }
 
@@ -74,7 +76,7 @@ func RunMain(es elasticsearch.Client) {
 	StartCommunication(eventChannel, es)
 
 	// schedule the repeated runs
-	ticker := time.NewTicker(settings.GetInterval())
+	ticker := time.NewTicker(config.GetInterval())
 
 	// setup signal handlers
 	signals := make(chan os.Signal, 1)
@@ -105,8 +107,10 @@ func RunMain(es elasticsearch.Client) {
 }
 
 func main() {
-	client := http.Client{Timeout: settings.GetTimeout()}
-	es := elasticsearch.NewClient(&client)
+	config = settings.Initialize()
+
+	client := http.Client{Timeout: config.GetTimeout()}
+	es := elasticsearch.NewClient(&client, config.GetBaseUrl())
 
 	RunMain(es)
 }

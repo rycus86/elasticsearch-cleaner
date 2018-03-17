@@ -11,17 +11,17 @@ func TestDefaults(t *testing.T) {
 	os.Setenv("PATTERN", "pattern")
 	defer os.Unsetenv("PATTERN")
 
-	Initialize()
+	config := Initialize()
 
-	if baseUrl := GetBaseUrl(); baseUrl != "base-url" {
+	if baseUrl := config.GetBaseUrl(); baseUrl != "base-url" {
 		t.Errorf("Base URL not set properly: %s", baseUrl)
 	}
 
-	if pattern := GetPattern(); pattern != "pattern" {
+	if pattern := config.GetPattern(); pattern != "pattern" {
 		t.Errorf("Unexpected pattern: %s", pattern)
 	}
 
-	if maxIndices := GetMaxIndices(); maxIndices != 20 {
+	if maxIndices := config.GetMaxIndices(); maxIndices != 20 {
 		t.Errorf("Unexpected max indices: %d", maxIndices)
 	}
 }
@@ -34,17 +34,17 @@ func TestNonDefaults(t *testing.T) {
 	os.Setenv("MAX_INDICES", "42")
 	defer os.Unsetenv("MAX_INDICES")
 
-	Initialize()
+	config := Initialize()
 
-	if baseUrl := GetBaseUrl(); baseUrl != "sample-url" {
+	if baseUrl := config.GetBaseUrl(); baseUrl != "sample-url" {
 		t.Errorf("Base URL not set properly: %s", baseUrl)
 	}
 
-	if pattern := GetPattern(); pattern != "changed" {
+	if pattern := config.GetPattern(); pattern != "changed" {
 		t.Errorf("Unexpected pattern: %s", pattern)
 	}
 
-	if maxIndices := GetMaxIndices(); maxIndices != 42 {
+	if maxIndices := config.GetMaxIndices(); maxIndices != 42 {
 		t.Errorf("Unexpected max indices: %d", maxIndices)
 	}
 }
@@ -174,9 +174,9 @@ func TestInterval(t *testing.T) {
 	os.Setenv("INTERVAL", "3m12s")
 	defer os.Unsetenv("INTERVAL")
 
-	Initialize()
+	config := Initialize()
 
-	if interval := GetInterval(); interval.Seconds() != 192 {
+	if interval := config.GetInterval(); interval.Seconds() != 192 {
 		t.Errorf("Unexpected interval: %s", interval)
 	}
 }
@@ -206,9 +206,9 @@ func TestTimeout(t *testing.T) {
 	os.Setenv("TIMEOUT", "42s")
 	defer os.Unsetenv("TIMEOUT")
 
-	Initialize()
+	config := Initialize()
 
-	if timeout := GetTimeout(); timeout.Seconds() != 42 {
+	if timeout := config.GetTimeout(); timeout.Seconds() != 42 {
 		t.Errorf("Unexpected timeout: %s", timeout)
 	}
 }

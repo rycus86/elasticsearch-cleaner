@@ -13,7 +13,7 @@ func ExampleStartCommunication() {
 	os.Setenv("MAX_INDICES", "1")
 	defer os.Unsetenv("MAX_INDICES")
 
-	settings.Initialize()
+	config = settings.Initialize()
 
 	StartCommunication(make(chan bool), &mockClient{
 		Keys: []string{"abc", "def", "ghi"},
@@ -37,7 +37,7 @@ func TestCheckIndices(t *testing.T) {
 	os.Setenv("MAX_INDICES", "2")
 	defer os.Unsetenv("MAX_INDICES")
 
-	settings.Initialize()
+	config = settings.Initialize()
 
 	ch := make(chan string, 5)
 	defer close(ch)
@@ -59,7 +59,7 @@ func ExampleCheckIndices() {
 	os.Setenv("MAX_INDICES", "2")
 	defer os.Unsetenv("MAX_INDICES")
 
-	settings.Initialize()
+	config = settings.Initialize()
 
 	CheckIndices(make(chan string, 5), &mockClient{
 		Keys: []string{"1", "2", "3", "4", "5"},
@@ -85,7 +85,7 @@ func TestLessThanMaximumIndices(t *testing.T) {
 	os.Setenv("MAX_INDICES", "10")
 	defer os.Unsetenv("MAX_INDICES")
 
-	settings.Initialize()
+	config = settings.Initialize()
 
 	ch := make(chan string, 5)
 	defer close(ch)
@@ -106,7 +106,7 @@ func ExampleLessThanMaximumIndices() {
 	os.Setenv("MAX_INDICES", "10")
 	defer os.Unsetenv("MAX_INDICES")
 
-	settings.Initialize()
+	config = settings.Initialize()
 
 	CheckIndices(make(chan string), &mockClient{
 		Keys: []string{"1", "2"},
@@ -117,7 +117,7 @@ func ExampleLessThanMaximumIndices() {
 }
 
 func TestDeleteIndex(t *testing.T) {
-	var client = &mockClient{}
+	client := &mockClient{}
 	DeleteIndex("test", client)
 
 	if client.DeletedKey != "test" {
@@ -141,7 +141,7 @@ type mockClient struct {
 	DeletedKey  string
 }
 
-func (m *mockClient) FetchIndices() ([]string, error) {
+func (m *mockClient) FetchIndices(pattern string) ([]string, error) {
 	var keys []string
 	keys, m.Keys = m.Keys, m.Keys[:0]
 	return keys, m.FetchError
@@ -159,6 +159,9 @@ func TestMain(m *testing.M) {
 	defer os.Unsetenv("PATTERN")
 	os.Setenv("MAX_INDICES", "1")
 	defer os.Unsetenv("MAX_INDICES")
+
+	config = settings.Initialize()
+	defer func() { config = nil }()
 
 	os.Exit(m.Run())
 }
