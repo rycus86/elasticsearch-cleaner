@@ -3,7 +3,7 @@ go:
   - "1.10"
 
 services:
-- docker
+  - docker
 
 addons:
   apt:
@@ -11,11 +11,12 @@ addons:
       - docker-ce
 
 install: skip
-script:
-  - go test ./... -v -cover
 
 jobs:
   include:
+    - stage: test
+      script:
+        - go test ./... -v -cover
     - &deploy-stage
       stage: build and deploy
       sudo: required
