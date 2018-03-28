@@ -35,6 +35,8 @@ func (es *esClient) FetchIndices(pattern string) ([]string, error) {
 		return []string{}, err
 	}
 
+	defer response.Body.Close()
+
 	if response.StatusCode != http.StatusOK {
 		fmt.Printf("Failed to fetch ES stats: %s\n", response.Status)
 		return []string{}, errors.New(fmt.Sprintf("HTTP %s", response.Status))
