@@ -2,21 +2,22 @@ language: go
 go:
   - "1.10"
 
-services:
-  - docker
-
-addons:
-  apt:
-    packages:
-      - docker-ce
-
 install: skip
 
 jobs:
   include:
     - stage: test
+      before_install:
+        - go get github.com/mattn/goveralls
+        - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+        - chmod +x ./cc-test-reporter
+        - ./cc-test-reporter before-build
       script:
-        - go test ./... -v -cover
+        - go test ./... -v -cover -covermode=count -coverprofile=c.out
+        # upload coverage stats
+        - $GOPATH/bin/goveralls -coverprofile=c.out -service=travis-ci || exit 0
+        - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT || exit 0
+
     - &deploy-stage
       stage: build and deploy
       sudo: required
